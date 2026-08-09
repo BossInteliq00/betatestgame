@@ -1,0 +1,3766 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Cyber Glide — Space Edition</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",Arial,sans-serif;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#020617;
+    color:white;
+}
+
+body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* =========================
+   НЕГІЗГІ КОНТЕЙНЕР
+========================= */
+
+#game-container{
+    position:relative;
+    width:100%;
+    height:100%;
+    max-width:520px;
+    overflow:hidden;
+    background:#020617;
+}
+
+/* =========================
+   CANVAS
+========================= */
+
+#gameCanvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    background:#020617;
+}
+
+/* =========================
+   ЭКРАНДАР
+========================= */
+
+.screen{
+    position:absolute;
+    inset:0;
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    text-align:center;
+    overflow:hidden;
+
+    background-size:cover;
+    background-position:center;
+
+    z-index:20;
+}
+
+.screen.active{
+    display:flex;
+}
+
+.screen::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+        radial-gradient(circle at center,rgba(0,255,255,.08),transparent 50%),
+        rgba(0,0,10,.76);
+    z-index:-1;
+}
+
+/* Фон суреттері */
+
+#welcome-screen,
+#login-screen,
+#register-screen{
+    background-image:url("image/2.jpeg");
+}
+
+#loading-screen{
+    background-image:url("image/3.jpeg");
+}
+
+#lobby-screen,
+#profile-screen,
+#shop-screen,
+#leaderboard-screen,
+#settings-screen,
+#mode-screen{
+    background-image:url("image/1.jpeg");
+}
+
+/* =========================
+   TEXT
+========================= */
+
+h1,h2,h3{
+    text-transform:uppercase;
+    letter-spacing:2px;
+}
+
+.neon{
+    color:#fff;
+    text-shadow:
+        0 0 5px #00ffff,
+        0 0 15px #00ffff,
+        0 0 30px #00ffff;
+}
+
+.pink{
+    color:#fff;
+    text-shadow:
+        0 0 5px #ff00ff,
+        0 0 15px #ff00ff,
+        0 0 30px #ff00ff;
+}
+
+.gold{
+    color:#fff;
+    text-shadow:
+        0 0 5px #ffd700,
+        0 0 15px #ffd700,
+        0 0 30px #ffd700;
+}
+
+.logo{
+    font-size:42px;
+    line-height:1;
+    margin-bottom:15px;
+}
+
+.subtitle{
+    color:#cbd5e1;
+    margin-bottom:30px;
+}
+
+/* =========================
+   INPUT
+========================= */
+
+input{
+    width:85%;
+    max-width:320px;
+    padding:15px;
+    margin:7px;
+    border-radius:12px;
+
+    background:rgba(0,0,0,.65);
+    color:white;
+
+    border:2px solid #00ffff;
+
+    outline:none;
+    text-align:center;
+    font-size:16px;
+
+    box-shadow:
+        0 0 10px rgba(0,255,255,.2);
+}
+
+input:focus{
+    box-shadow:
+        0 0 15px #00ffff;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn{
+    width:85%;
+    max-width:320px;
+
+    padding:14px 20px;
+    margin:7px;
+
+    border-radius:12px;
+
+    background:rgba(0,0,0,.65);
+
+    color:#00ffff;
+    border:2px solid #00ffff;
+
+    font-size:16px;
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 0 10px rgba(0,255,255,.35) inset,
+        0 0 10px rgba(0,255,255,.2);
+
+    transition:.15s;
+}
+
+.btn:hover{
+    background:rgba(0,255,255,.12);
+}
+
+.btn:active{
+    transform:scale(.95);
+    background:#00ffff;
+    color:#001018;
+}
+
+.btn-pink{
+    color:#ff00ff;
+    border-color:#ff00ff;
+    box-shadow:0 0 10px rgba(255,0,255,.35) inset;
+}
+
+.btn-pink:active{
+    background:#ff00ff;
+    color:#000;
+}
+
+.btn-gold{
+    color:#ffd700;
+    border-color:#ffd700;
+    box-shadow:0 0 10px rgba(255,215,0,.35) inset;
+}
+
+.btn-gold:active{
+    background:#ffd700;
+    color:#000;
+}
+
+.btn-green{
+    color:#00ff88;
+    border-color:#00ff88;
+}
+
+.btn-gray{
+    color:#aaa;
+    border-color:#555;
+    box-shadow:none;
+}
+
+/* =========================
+   TOP STATS
+========================= */
+
+.top-stats{
+    position:absolute;
+    top:15px;
+    left:0;
+    width:100%;
+
+    display:flex;
+    justify-content:space-around;
+
+    z-index:30;
+}
+
+.stat{
+    background:rgba(0,0,0,.7);
+    border:1px solid #00ffff;
+    padding:9px 15px;
+    border-radius:12px;
+    font-weight:bold;
+}
+
+/* =========================
+   LOADER
+========================= */
+
+.loader{
+    width:80%;
+    max-width:350px;
+    height:20px;
+
+    border:2px solid #00ffff;
+    border-radius:20px;
+
+    overflow:hidden;
+}
+
+.loader-bar{
+    width:0%;
+    height:100%;
+
+    background:#00ffff;
+
+    box-shadow:
+        0 0 15px #00ffff;
+}
+
+/* =========================
+   SHOP
+========================= */
+
+.shop-grid{
+    width:95%;
+    max-width:430px;
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+
+    max-height:55vh;
+    overflow-y:auto;
+
+    padding:5px;
+}
+
+.shop-item{
+    background:rgba(0,0,0,.8);
+
+    border:1px solid #00ffff;
+
+    border-radius:14px;
+
+    padding:12px;
+
+    text-align:center;
+}
+
+.shop-item img{
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    margin-bottom:7px;
+}
+
+.color-box{
+    width:60px;
+    height:60px;
+    border-radius:12px;
+
+    border:2px solid white;
+
+    margin:0 auto 8px;
+}
+
+/* =========================
+   LIST
+========================= */
+
+.list{
+    width:95%;
+    max-width:430px;
+
+    max-height:58vh;
+
+    overflow-y:auto;
+
+    background:rgba(0,0,0,.7);
+
+    border:1px solid #00ffff;
+    border-radius:14px;
+
+    padding:8px;
+}
+
+.list-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:10px;
+
+    border-bottom:1px solid rgba(0,255,255,.2);
+
+    cursor:pointer;
+}
+
+.avatar{
+    width:45px;
+    height:45px;
+
+    border-radius:50%;
+
+    border:2px solid #00ffff;
+
+    object-fit:cover;
+
+    background:#111;
+}
+
+/* =========================
+   GAME HUD
+========================= */
+
+#game-ui{
+    position:absolute;
+
+    top:12px;
+    left:10px;
+    right:10px;
+
+    display:none;
+
+    justify-content:space-between;
+
+    z-index:40;
+
+    pointer-events:none;
+}
+
+.game-stat{
+    background:rgba(0,0,0,.65);
+
+    padding:8px 12px;
+
+    border-radius:12px;
+
+    border:1px solid rgba(0,255,255,.4);
+
+    font-weight:bold;
+}
+
+/* =========================
+   MOBILE CONTROL
+========================= */
+
+#mobile-controls{
+    position:absolute;
+
+    left:0;
+    bottom:15px;
+
+    width:100%;
+
+    display:none;
+
+    justify-content:space-around;
+
+    z-index:45;
+}
+
+.touch-btn{
+    width:65px;
+    height:65px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(15,23,42,.75);
+
+    border:2px solid #00ffff;
+
+    color:white;
+
+    font-size:25px;
+
+    box-shadow:0 0 15px rgba(0,255,255,.3);
+}
+
+.touch-btn:active{
+    background:#00ffff;
+    color:#000;
+}
+
+/* =========================
+   GAME OVER
+========================= */
+
+#gameOver{
+    position:absolute;
+
+    left:50%;
+    top:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:85%;
+    max-width:360px;
+
+    padding:25px;
+
+    background:rgba(0,0,0,.92);
+
+    border:2px solid #00ffff;
+
+    border-radius:18px;
+
+    box-shadow:0 0 30px #00ffff;
+
+    display:none;
+    flex-direction:column;
+    align-items:center;
+
+    z-index:60;
+}
+
+/* =========================
+   PAUSE
+========================= */
+
+#pauseButton{
+    position:absolute;
+
+    top:60px;
+    right:12px;
+
+    z-index:50;
+
+    display:none;
+
+    padding:8px 12px;
+
+    border-radius:10px;
+
+    background:rgba(0,0,0,.7);
+
+    color:#00ffff;
+
+    border:1px solid #00ffff;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.overlay{
+    position:absolute;
+    inset:0;
+
+    background:rgba(0,0,0,.8);
+
+    display:none;
+
+    z-index:90;
+}
+
+.modal{
+    position:absolute;
+
+    left:50%;
+    top:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:85%;
+    max-width:350px;
+
+    background:#080b15;
+
+    border:2px solid #00ffff;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    text-align:center;
+
+    display:none;
+
+    z-index:100;
+
+    box-shadow:0 0 30px #00ffff;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.error{
+    color:#ff4444;
+    margin:5px;
+    min-height:20px;
+    font-size:14px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-height:650px){
+    .logo{
+        font-size:34px;
+    }
+
+    .btn{
+        padding:11px;
+        margin:4px;
+    }
+
+    .shop-grid{
+        max-height:45vh;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game-container">
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- ================= GAME HUD ================= -->
+
+<div id="game-ui">
+
+    <div class="game-stat">
+        🏆 <span id="gameScore">0</span>
+    </div>
+
+    <div class="game-stat">
+        🪙 <span id="gameCoins">0</span>
+    </div>
+
+    <div class="game-stat">
+        ❤️ <span id="gameLives">3</span>
+    </div>
+
+</div>
+
+<button id="pauseButton" onclick="togglePause()">⏸</button>
+
+<!-- ================= MOBILE ================= -->
+
+<div id="mobile-controls">
+
+    <div class="touch-btn" id="leftBtn">◀</div>
+
+    <div class="touch-btn" id="fireBtn">🔥</div>
+
+    <div class="touch-btn" id="rightBtn">▶</div>
+
+</div>
+
+<!-- ================= WELCOME ================= -->
+
+<section id="welcome-screen" class="screen active">
+
+    <h1 class="logo neon">
+        CYBER<br>GLIDE
+    </h1>
+
+    <p class="subtitle">
+        🚀 SPACE EDITION
+    </p>
+
+    <button class="btn" onclick="showScreen('login-screen')">
+        Кіру
+    </button>
+
+    <button class="btn btn-pink" onclick="showScreen('register-screen')">
+        Жаңа аккаунт
+    </button>
+
+</section>
+
+<!-- ================= LOGIN ================= -->
+
+<section id="login-screen" class="screen">
+
+    <h2 class="neon">КІРУ</h2>
+
+    <input id="loginUser" type="text" placeholder="Логин">
+
+    <input id="loginPass" type="password" placeholder="Құпия сөз">
+
+    <div id="loginError" class="error"></div>
+
+    <button class="btn" onclick="login()">
+        КІРУ
+    </button>
+
+    <button class="btn btn-gray" onclick="showScreen('welcome-screen')">
+        АРТҚА
+    </button>
+
+</section>
+
+<!-- ================= REGISTER ================= -->
+
+<section id="register-screen" class="screen">
+
+    <h2 class="pink">ТІРКЕЛУ</h2>
+
+    <input id="regUser" type="text" placeholder="Жаңа логин">
+
+    <input id="regPass" type="password" placeholder="Құпия сөз">
+
+    <div id="registerError" class="error"></div>
+
+    <button class="btn btn-pink" onclick="register()">
+        ТІРКЕЛУ
+    </button>
+
+    <button class="btn btn-gray" onclick="showScreen('welcome-screen')">
+        АРТҚА
+    </button>
+
+</section>
+
+<!-- ================= LOADING ================= -->
+
+<section id="loading-screen" class="screen">
+
+    <h2 class="neon" id="loadingText">
+        ҒАРЫШ ДАЙЫНДАЛУДА...
+    </h2>
+
+    <div class="loader">
+        <div class="loader-bar" id="loaderBar"></div>
+    </div>
+
+    <p style="margin-top:15px;color:#aaa;">
+        CYBER GLIDE ENGINE
+    </p>
+
+</section>
+
+<!-- ================= LOBBY ================= -->
+
+<section id="lobby-screen" class="screen">
+
+    <div class="top-stats">
+
+        <div class="stat neon">
+            🏆 <span id="lobbyScore">0</span>
+        </div>
+
+        <div class="stat gold">
+            🪙 <span id="lobbyCoins">0</span>
+        </div>
+
+    </div>
+
+    <h1 class="logo neon" style="font-size:34px;margin-top:45px;">
+        CYBER GLIDE
+    </h1>
+
+    <p id="welcomePlayer" style="color:#aaa;margin-bottom:20px;">
+        PLAYER
+    </p>
+
+    <button class="btn" onclick="showScreen('mode-screen')">
+        🚀 ОЙЫНДЫ БАСТАУ
+    </button>
+
+    <button class="btn btn-gold" onclick="openShop()">
+        🛒 ДҮКЕН
+    </button>
+
+    <button class="btn" onclick="openLeaderboard()">
+        🏆 ЛИДЕРЛЕР
+    </button>
+
+    <button class="btn btn-pink" onclick="openProfile()">
+        👤 ПРОФИЛЬ
+    </button>
+
+    <button class="btn btn-gray" onclick="showScreen('settings-screen')">
+        ⚙️ БАПТАУЛАР
+    </button>
+
+</section>
+
+<!-- ================= MODE ================= -->
+
+<section id="mode-screen" class="screen">
+
+    <h2 class="neon">РЕЖИМ ТАҢДАУ</h2>
+
+    <p style="color:#aaa;margin-bottom:20px;">
+        Қай режимде ойнайсыз?
+    </p>
+
+    <button class="btn btn-pink" onclick="startLoadingGame('ranked')">
+        🏆 RANKED
+    </button>
+
+    <button class="btn" onclick="startLoadingGame('classic')">
+        🚀 CLASSIC
+    </button>
+
+    <button class="btn btn-gray" onclick="showScreen('lobby-screen')">
+        АРТҚА
+    </button>
+
+</section>
+
+<!-- ================= SHOP ================= -->
+
+<section id="shop-screen" class="screen">
+
+    <h2 class="gold">🛒 ДҮКЕН</h2>
+
+    <p style="margin-bottom:10px;">
+        Монета:
+        <span id="shopCoins" class="gold">0</span> 🪙
+    </p>
+
+    <div style="display:flex;gap:5px;margin-bottom:10px;">
+
+        <button class="btn" style="width:140px;padding:10px"
+                onclick="renderShop('avatars')">
+            🤖 АВАТАР
+        </button>
+
+        <button class="btn btn-pink" style="width:140px;padding:10px"
+                onclick="renderShop('outfits')">
+            🚀 КЕМЕ
+        </button>
+
+    </div>
+
+    <div class="shop-grid" id="shopGrid"></div>
+
+    <button class="btn btn-gray" onclick="showScreen('lobby-screen')">
+        ЛОББИ
+    </button>
+
+</section>
+
+<!-- ================= PROFILE ================= -->
+
+<section id="profile-screen" class="screen">
+
+    <h2 class="pink">👤 ПРОФИЛЬ</h2>
+
+    <img id="myAvatar" class="avatar"
+         style="width:100px;height:100px">
+
+    <h3 id="myName" style="margin:10px">
+        PLAYER
+    </h3>
+
+    <p>
+        🏆 Рейтинг:
+        <span id="myScore" class="neon">0</span>
+    </p>
+
+    <p>
+        🪙 Монета:
+        <span id="myCoins" class="gold">0</span>
+    </p>
+
+    <p>
+        ❤️ Лайк:
+        <span id="myLikes">0</span>
+    </p>
+
+    <p style="font-size:12px;color:#888;margin-top:10px">
+        Тіркелген:
+        <span id="myRegDate"></span>
+    </p>
+
+    <button class="btn" onclick="changeAvatar()">
+        🖼️ АВАТАР АУЫСТЫРУ
+    </button>
+
+    <button class="btn btn-pink" onclick="changeOutfit()">
+        🚀 КЕМЕ ТҮСІН АУЫСТЫРУ
+    </button>
+
+    <button class="btn btn-gray" onclick="showScreen('lobby-screen')">
+        АРТҚА
+    </button>
+
+</section>
+
+<!-- ================= LEADERBOARD ================= -->
+
+<section id="leaderboard-screen" class="screen">
+
+    <h2 class="neon">
+        🏆 ТОП ОЙЫНШЫЛАР
+    </h2>
+
+    <div class="list" id="leaderboardList"></div>
+
+    <button class="btn" style="margin-top:15px"
+            onclick="showScreen('lobby-screen')">
+        ЛОББИ
+    </button>
+
+</section>
+
+<!-- ================= SETTINGS ================= -->
+
+<section id="settings-screen" class="screen">
+
+    <h2 class="neon">
+        ⚙️ БАПТАУЛАР
+    </h2>
+
+    <button class="btn" id="musicButton"
+            onclick="toggleMusic()">
+        🎵 ӘУЕН: ҚОСУЛЫ
+    </button>
+
+    <button class="btn"
+            id="sfxButton"
+            onclick="toggleSFX()">
+        🔊 ДЫБЫС: ҚОСУЛЫ
+    </button>
+
+    <button class="btn btn-pink"
+            style="margin-top:30px"
+            onclick="logout()">
+        🚪 АККАУНТТАН ШЫҒУ
+    </button>
+
+    <button class="btn btn-gray"
+            onclick="showScreen('lobby-screen')">
+        АРТҚА
+    </button>
+
+</section>
+
+<!-- ================= GAME OVER ================= -->
+
+<div id="gameOver">
+
+    <h2 class="neon">
+        💥 ОЙЫН АЯҚТАЛДЫ
+    </h2>
+
+    <p style="margin:8px">
+        Ұпай:
+        <b id="finalScore" class="neon">0</b>
+    </p>
+
+    <p style="margin:8px">
+        Монета:
+        <b id="finalCoins" class="gold">0</b>
+    </p>
+
+    <p style="margin:8px">
+        Режим:
+        <b id="finalMode">CLASSIC</b>
+    </p>
+
+    <button class="btn" onclick="restartGame()">
+        🔄 ҚАЙТА ОЙНАУ
+    </button>
+
+    <button class="btn btn-gray" onclick="returnLobby()">
+        🏠 ЛОББИ
+    </button>
+
+</div>
+
+<!-- ================= PLAYER MODAL ================= -->
+
+<div class="overlay" id="overlay"
+     onclick="closePlayerModal()"></div>
+
+<div class="modal" id="playerModal">
+
+    <img id="modalAvatar"
+         class="avatar"
+         style="width:85px;height:85px">
+
+    <h2 id="modalName" class="neon">
+        PLAYER
+    </h2>
+
+    <p>
+        🏆 <span id="modalScore">0</span>
+    </p>
+
+    <p>
+        ❤️ <span id="modalLikes">0</span>
+    </p>
+
+    <button class="btn btn-pink"
+            onclick="likePlayer()">
+        ❤️ ЛАЙК
+    </button>
+
+    <button class="btn btn-gray"
+            onclick="closePlayerModal()">
+        ЖАБУ
+    </button>
+
+</div>
+
+</div>
+
+<script>
+
+/* ==========================================================
+   DATABASE
+========================================================== */
+
+let db = {};
+
+try{
+    db = JSON.parse(localStorage.getItem("cyberGlideDB") || "{}");
+}catch(e){
+    db = {};
+}
+
+let currentUser = null;
+
+function saveDB(){
+    localStorage.setItem(
+        "cyberGlideDB",
+        JSON.stringify(db)
+    );
+}
+
+/* ==========================================================
+   SHOP
+========================================================== */
+
+const SHOP = {
+
+    avatars:[
+        {
+            id:"av1",
+            name:"Starter",
+            src:"https://api.dicebear.com/7.x/bottts/svg?seed=Starter",
+            price:0
+        },
+        {
+            id:"av2",
+            name:"Neon",
+            src:"https://api.dicebear.com/7.x/bottts/svg?seed=Neon",
+            price:50
+        },
+        {
+            id:"av3",
+            name:"Cyber",
+            src:"https://api.dicebear.com/7.x/bottts/svg?seed=Cyber",
+            price:100
+        },
+        {
+            id:"av4",
+            name:"Boss",
+            src:"https://api.dicebear.com/7.x/bottts/svg?seed=Boss",
+            price:500
+        }
+    ],
+
+    outfits:[
+        {
+            id:"out1",
+            name:"CYAN",
+            color:"#00ffff",
+            price:0
+        },
+        {
+            id:"out2",
+            name:"PINK",
+            color:"#ff00ff",
+            price:50
+        },
+        {
+            id:"out3",
+            name:"GREEN",
+            color:"#00ff66",
+            price:100
+        },
+        {
+            id:"out4",
+            name:"GOLD",
+            color:"#ffd700",
+            price:300
+        }
+    ]
+
+};
+
+/* ==========================================================
+   AUDIO ENGINE
+========================================================== */
+
+const AudioEngine = {
+
+    ctx:null,
+    musicTimer:null,
+    musicIndex:0,
+
+    notes:[
+        261.63,
+        329.63,
+        392,
+        523.25,
+        440,
+        349.23
+    ],
+
+    init(){
+
+        if(!this.ctx){
+
+            const AC =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            if(!AC) return;
+
+            this.ctx = new AC();
+        }
+
+        if(this.ctx.state === "suspended"){
+            this.ctx.resume();
+        }
+
+    },
+
+    tone(freq,type,duration,volume){
+
+        if(!settings.sfx) return;
+
+        this.init();
+
+        if(!this.ctx) return;
+
+        try{
+
+            const osc =
+                this.ctx.createOscillator();
+
+            const gain =
+                this.ctx.createGain();
+
+            osc.type = type;
+
+            osc.frequency.setValueAtTime(
+                freq,
+                this.ctx.currentTime
+            );
+
+            gain.gain.setValueAtTime(
+                volume,
+                this.ctx.currentTime
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                this.ctx.currentTime + duration
+            );
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start();
+
+            osc.stop(
+                this.ctx.currentTime + duration
+            );
+
+        }catch(e){}
+
+    },
+
+    click(){
+        this.tone(700,"square",.07,.05);
+    },
+
+    coin(){
+        this.tone(880,"sine",.12,.08);
+        setTimeout(()=>{
+            this.tone(1200,"sine",.12,.06);
+        },70);
+    },
+
+    laser(){
+        this.tone(880,"square",.08,.06);
+    },
+
+    explosion(){
+
+        this.tone(
+            100,
+            "sawtooth",
+            .3,
+            .12
+        );
+
+    },
+
+    startMusic(){
+
+        if(!settings.music) return;
+
+        this.init();
+
+        if(this.musicTimer) return;
+
+        this.musicTimer =
+            setInterval(()=>{
+
+                if(!settings.music){
+                    this.stopMusic();
+                    return;
+                }
+
+                const f =
+                    this.notes[
+                        this.musicIndex %
+                        this.notes.length
+                    ];
+
+                this.musicIndex++;
+
+                /*
+                 * Музыка ішкі синтезатор арқылы.
+                 * Сыртқы MP3 қажет емес.
+                 */
+
+                if(this.ctx){
+
+                    const osc =
+                        this.ctx.createOscillator();
+
+                    const gain =
+                        this.ctx.createGain();
+
+                    osc.type = "triangle";
+
+                    osc.frequency.value = f;
+
+                    gain.gain.value = .025;
+
+                    gain.gain.exponentialRampToValueAtTime(
+                        .0001,
+                        this.ctx.currentTime + .25
+                    );
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+
+                    osc.stop(
+                        this.ctx.currentTime + .25
+                    );
+
+                }
+
+            },320);
+
+    },
+
+    stopMusic(){
+
+        if(this.musicTimer){
+
+            clearInterval(
+                this.musicTimer
+            );
+
+            this.musicTimer = null;
+        }
+
+    }
+
+};
+
+/* ==========================================================
+   SETTINGS
+========================================================== */
+
+const settings = {
+
+    music:
+        localStorage.getItem("cg_music")
+        !== "false",
+
+    sfx:
+        localStorage.getItem("cg_sfx")
+        !== "false"
+
+};
+
+function updateSettings(){
+
+    const music =
+        document.getElementById("musicButton");
+
+    const sfx =
+        document.getElementById("sfxButton");
+
+    music.innerText =
+        "🎵 ӘУЕН: " +
+        (settings.music ?
+        "ҚОСУЛЫ" :
+        "ӨШІРУЛІ");
+
+    sfx.innerText =
+        "🔊 ДЫБЫС: " +
+        (settings.sfx ?
+        "ҚОСУЛЫ" :
+        "ӨШІРУЛІ");
+
+}
+
+function toggleMusic(){
+
+    settings.music =
+        !settings.music;
+
+    localStorage.setItem(
+        "cg_music",
+        settings.music
+    );
+
+    if(settings.music){
+
+        AudioEngine.startMusic();
+
+    }else{
+
+        AudioEngine.stopMusic();
+
+    }
+
+    updateSettings();
+
+}
+
+function toggleSFX(){
+
+    settings.sfx =
+        !settings.sfx;
+
+    localStorage.setItem(
+        "cg_sfx",
+        settings.sfx
+    );
+
+    if(settings.sfx){
+
+        AudioEngine.coin();
+
+    }
+
+    updateSettings();
+
+}
+
+/* ==========================================================
+   SCREEN
+========================================================== */
+
+function showScreen(id){
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(s=>{
+            s.classList.remove("active");
+        });
+
+    const screen =
+        document.getElementById(id);
+
+    if(screen){
+        screen.classList.add("active");
+    }
+
+    if(
+        settings.music &&
+        id !== "game-screen"
+    ){
+        AudioEngine.startMusic();
+    }
+
+}
+
+/* ==========================================================
+   REGISTER
+========================================================== */
+
+function register(){
+
+    const user =
+        document
+        .getElementById("regUser")
+        .value
+        .trim();
+
+    const pass =
+        document
+        .getElementById("regPass")
+        .value
+        .trim();
+
+    const error =
+        document.getElementById(
+            "registerError"
+        );
+
+    error.innerText="";
+
+    if(user.length < 3){
+
+        error.innerText =
+            "Логин кемінде 3 таңба болуы керек.";
+
+        return;
+
+    }
+
+    if(pass.length < 3){
+
+        error.innerText =
+            "Құпия сөз кемінде 3 таңба болуы керек.";
+
+        return;
+
+    }
+
+    if(db[user]){
+
+        error.innerText =
+            "Бұл логин бұрын тіркелген.";
+
+        return;
+
+    }
+
+    const now =
+        new Date();
+
+    db[user] = {
+
+        password:pass,
+
+        score:0,
+
+        coins:0,
+
+        likes:0,
+
+        currentAvatar:"av1",
+
+        currentOutfit:"out1",
+
+        unlockedAvatars:["av1"],
+
+        unlockedOutfits:["out1"],
+
+        regDate:
+            now.toLocaleDateString(
+                "kk-KZ"
+            ) +
+            " " +
+            now.toLocaleTimeString(
+                "kk-KZ"
+            )
+
+    };
+
+    saveDB();
+
+    loginSuccess(user);
+
+}
+
+/* ==========================================================
+   LOGIN
+========================================================== */
+
+function login(){
+
+    const user =
+        document
+        .getElementById("loginUser")
+        .value
+        .trim();
+
+    const pass =
+        document
+        .getElementById("loginPass")
+        .value
+        .trim();
+
+    const error =
+        document.getElementById(
+            "loginError"
+        );
+
+    error.innerText="";
+
+    if(!db[user]){
+
+        error.innerText =
+            "Аккаунт табылмады.";
+
+        return;
+
+    }
+
+    if(db[user].password !== pass){
+
+        error.innerText =
+            "Құпия сөз қате.";
+
+        return;
+
+    }
+
+    loginSuccess(user);
+
+}
+
+function loginSuccess(username){
+
+    currentUser =
+        db[username];
+
+    localStorage.setItem(
+        "cyberGlideCurrentUser",
+        username
+    );
+
+    updateLobby();
+
+    loading(
+        "lobby-screen"
+    );
+
+}
+
+/* ==========================================================
+   LOGOUT
+========================================================== */
+
+function logout(){
+
+    if(gameState === "PLAYING"){
+        stopGame();
+    }
+
+    AudioEngine.stopMusic();
+
+    localStorage.removeItem(
+        "cyberGlideCurrentUser"
+    );
+
+    currentUser=null;
+
+    showScreen(
+        "welcome-screen"
+    );
+
+}
+
+/* ==========================================================
+   LOADING
+========================================================== */
+
+let loadingTimer=null;
+
+function loading(target, onComplete=null){
+
+    showScreen(
+        "loading-screen"
+    );
+
+    const bar =
+        document.getElementById(
+            "loaderBar"
+        );
+
+    const text =
+        document.getElementById(
+            "loadingText"
+        );
+
+    let progress=0;
+
+    if(loadingTimer){
+        clearInterval(loadingTimer);
+    }
+
+    bar.style.width="0%";
+    text.innerText="ҒАРЫШ ДАЙЫНДАЛУДА...";
+
+    /*
+     * ДӘЛ 10 СЕКУНДТЫҚ ЖҮКТЕЛУ:
+     * 100 қадам × 100 мс = 10 000 мс.
+     * Жолақ біртіндеп 0%-дан 100%-ға дейін толады.
+     */
+    loadingTimer =
+        setInterval(()=>{
+
+            progress += 1;
+
+            bar.style.width =
+                progress+"%";
+
+            if(progress>=20 && progress<40)
+                text.innerText =
+                    "🌌 ҒАРЫШ КАРТАСЫ ЖҮКТЕЛУДЕ...";
+
+            if(progress>=40 && progress<65)
+                text.innerText =
+                    "🚀 КЕМЕ ЖҮЙЕСІ ДАЙЫНДАЛУДА...";
+
+            if(progress>=65 && progress<85)
+                text.innerText =
+                    "⚡ ҚОЗҒАЛТҚЫШ ЖҮЙЕСІ...";
+
+            if(progress>=85 && progress<100)
+                text.innerText =
+                    "🔥 ҚАРУ ЖҮЙЕСІ ҚОСЫЛУДА...";
+
+            if(progress>=100){
+
+                clearInterval(
+                    loadingTimer
+                );
+
+                loadingTimer=null;
+
+                text.innerText="✅ ДАЙЫН!";
+
+                setTimeout(()=>{
+                    if(typeof onComplete === "function"){
+                        onComplete();
+                    }else if(target){
+                        showScreen(target);
+                    }
+                },120);
+
+            }
+
+        },100);
+
+}
+
+/* ==========================================================
+   LOBBY
+========================================================== */
+
+function updateLobby(){
+
+    if(!currentUser) return;
+
+    document.getElementById(
+        "lobbyScore"
+    ).innerText =
+        currentUser.score;
+
+    document.getElementById(
+        "lobbyCoins"
+    ).innerText =
+        currentUser.coins;
+
+    document.getElementById(
+        "welcomePlayer"
+    ).innerText =
+        "PLAYER: " +
+        localStorage.getItem(
+            "cyberGlideCurrentUser"
+        );
+
+}
+
+/* ==========================================================
+   PROFILE
+========================================================== */
+
+function openProfile(){
+
+    if(!currentUser) return;
+
+    document.getElementById(
+        "myName"
+    ).innerText =
+        localStorage.getItem(
+            "cyberGlideCurrentUser"
+        );
+
+    document.getElementById(
+        "myScore"
+    ).innerText =
+        currentUser.score;
+
+    document.getElementById(
+        "myCoins"
+    ).innerText =
+        currentUser.coins;
+
+    document.getElementById(
+        "myLikes"
+    ).innerText =
+        currentUser.likes;
+
+    document.getElementById(
+        "myRegDate"
+    ).innerText =
+        currentUser.regDate;
+
+    const avatar =
+        SHOP.avatars.find(
+            a =>
+            a.id ===
+            currentUser.currentAvatar
+        );
+
+    document.getElementById(
+        "myAvatar"
+    ).src =
+        avatar ?
+        avatar.src :
+        SHOP.avatars[0].src;
+
+    showScreen(
+        "profile-screen"
+    );
+
+}
+
+function changeAvatar(){
+
+    const list =
+        currentUser.unlockedAvatars;
+
+    if(list.length===0) return;
+
+    let index =
+        list.indexOf(
+            currentUser.currentAvatar
+        );
+
+    index =
+        (index+1) %
+        list.length;
+
+    currentUser.currentAvatar =
+        list[index];
+
+    saveDB();
+
+    openProfile();
+
+}
+
+function changeOutfit(){
+
+    const list =
+        currentUser.unlockedOutfits;
+
+    if(list.length===0) return;
+
+    let index =
+        list.indexOf(
+            currentUser.currentOutfit
+        );
+
+    index =
+        (index+1) %
+        list.length;
+
+    currentUser.currentOutfit =
+        list[index];
+
+    saveDB();
+
+    openProfile();
+
+}
+
+/* ==========================================================
+   SHOP
+========================================================== */
+
+function openShop(){
+
+    document.getElementById(
+        "shopCoins"
+    ).innerText =
+        currentUser.coins;
+
+    renderShop("avatars");
+
+    showScreen(
+        "shop-screen"
+    );
+
+}
+
+function renderShop(type){
+
+    const grid =
+        document.getElementById(
+            "shopGrid"
+        );
+
+    grid.innerHTML="";
+
+    const items =
+        type==="avatars"
+        ?
+        SHOP.avatars
+        :
+        SHOP.outfits;
+
+    const unlocked =
+        type==="avatars"
+        ?
+        currentUser.unlockedAvatars
+        :
+        currentUser.unlockedOutfits;
+
+    items.forEach(item=>{
+
+        const owned =
+            unlocked.includes(
+                item.id
+            );
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.className="shop-item";
+
+        let visual="";
+
+        if(type==="avatars"){
+
+            visual =
+                `<img src="${item.src}"
+                      alt="">`;
+
+        }else{
+
+            visual =
+                `<div class="color-box"
+                      style="background:${item.color}">
+                 </div>`;
+
+        }
+
+        let button="";
+
+        if(owned){
+
+            button =
+                `<div style="
+                    color:#00ff66;
+                    border:1px solid #00ff66;
+                    padding:6px;
+                    border-radius:8px;
+                ">
+                    ✓ АЛЫНҒАН
+                </div>`;
+
+        }else{
+
+            button =
+                `<button
+                    class="btn btn-gold"
+                    style="width:100%;padding:7px;margin:3px"
+                    onclick="
+                        buyItem(
+                            '${type}',
+                            '${item.id}',
+                            ${item.price}
+                        )
+                    ">
+                    ${item.price} 🪙
+                </button>`;
+
+        }
+
+        div.innerHTML =
+            visual +
+            `<p style="
+                font-size:13px;
+                margin-bottom:5px;
+            ">
+                ${item.name}
+            </p>` +
+            button;
+
+        grid.appendChild(
+            div
+        );
+
+    });
+
+}
+
+function buyItem(type,id,price){
+
+    if(currentUser.coins < price){
+
+        alert(
+            "🪙 Монета жеткіліксіз!"
+        );
+
+        return;
+
+    }
+
+    currentUser.coins -=
+        price;
+
+    if(type==="avatars"){
+
+        if(
+            !currentUser
+            .unlockedAvatars
+            .includes(id)
+        ){
+
+            currentUser
+                .unlockedAvatars
+                .push(id);
+
+        }
+
+    }else{
+
+        if(
+            !currentUser
+            .unlockedOutfits
+            .includes(id)
+        ){
+
+            currentUser
+                .unlockedOutfits
+                .push(id);
+
+        }
+
+    }
+
+    saveDB();
+
+    document.getElementById(
+        "shopCoins"
+    ).innerText =
+        currentUser.coins;
+
+    renderShop(type);
+
+    AudioEngine.coin();
+
+}
+
+/* ==========================================================
+   LEADERBOARD
+========================================================== */
+
+let viewingPlayer=null;
+
+function openLeaderboard(){
+
+    const list =
+        document.getElementById(
+            "leaderboardList"
+        );
+
+    list.innerHTML="";
+
+    const players =
+        Object.keys(db)
+        .map(username=>({
+
+            username,
+
+            ...db[username]
+
+        }))
+        .sort(
+            (a,b)=>
+                b.score-a.score
+        );
+
+    if(players.length===0){
+
+        list.innerHTML =
+            `<p style="padding:20px;color:#aaa">
+                Әзірге ойыншылар жоқ.
+             </p>`;
+
+    }
+
+    players.forEach(
+        (player,index)=>{
+
+            const avatar =
+                SHOP.avatars.find(
+                    a =>
+                    a.id ===
+                    player.currentAvatar
+                );
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "list-item";
+
+            item.innerHTML = `
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:8px
+                ">
+
+                    <b style="color:#00ffff">
+                        #${index+1}
+                    </b>
+
+                    <img
+                        class="avatar"
+                        style="
+                            width:38px;
+                            height:38px
+                        "
+                        src="${
+                            avatar ?
+                            avatar.src :
+                            SHOP.avatars[0].src
+                        }">
+
+                    <span>
+                        ${escapeHTML(
+                            player.username
+                        )}
+                    </span>
+
+                </div>
+
+                <b class="neon">
+                    ${player.score} 🏆
+                </b>
+            `;
+
+            item.onclick=()=>{
+
+                AudioEngine.click();
+
+                openPlayerModal(
+                    player
+                );
+
+            };
+
+            list.appendChild(
+                item
+            );
+
+        }
+    );
+
+    showScreen(
+        "leaderboard-screen"
+    );
+
+}
+
+function escapeHTML(text){
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+function openPlayerModal(player){
+
+    viewingPlayer =
+        player;
+
+    const avatar =
+        SHOP.avatars.find(
+            a =>
+            a.id ===
+            player.currentAvatar
+        );
+
+    document.getElementById(
+        "modalAvatar"
+    ).src =
+        avatar ?
+        avatar.src :
+        SHOP.avatars[0].src;
+
+    document.getElementById(
+        "modalName"
+    ).innerText =
+        player.username;
+
+    document.getElementById(
+        "modalScore"
+    ).innerText =
+        player.score;
+
+    document.getElementById(
+        "modalLikes"
+    ).innerText =
+        player.likes;
+
+    document.getElementById(
+        "overlay"
+    ).style.display="block";
+
+    document.getElementById(
+        "playerModal"
+    ).style.display="block";
+
+}
+
+function closePlayerModal(){
+
+    document.getElementById(
+        "overlay"
+    ).style.display="none";
+
+    document.getElementById(
+        "playerModal"
+    ).style.display="none";
+
+    viewingPlayer=null;
+
+}
+
+function likePlayer(){
+
+    if(!viewingPlayer)
+        return;
+
+    const myName =
+        localStorage.getItem(
+            "cyberGlideCurrentUser"
+        );
+
+    if(
+        viewingPlayer.username ===
+        myName
+    ){
+
+        alert(
+            "Өзіңізге лайк қоя алмайсыз."
+        );
+
+        return;
+
+    }
+
+    if(
+        !db[viewingPlayer.username]
+    ){
+
+        closePlayerModal();
+        return;
+
+    }
+
+    db[
+        viewingPlayer.username
+    ].likes++;
+
+    saveDB();
+
+    AudioEngine.coin();
+
+    alert(
+        "❤️ Лайк қойылды!"
+    );
+
+    closePlayerModal();
+
+    openLeaderboard();
+
+}
+
+/* ==========================================================
+   GAME ENGINE
+========================================================== */
+
+const canvas =
+    document.getElementById(
+        "gameCanvas"
+    );
+
+const ctx =
+    canvas.getContext("2d");
+
+let W=0;
+let H=0;
+
+function resizeCanvas(){
+
+    W =
+        document
+        .getElementById(
+            "game-container"
+        )
+        .clientWidth;
+
+    H =
+        document
+        .getElementById(
+            "game-container"
+        )
+        .clientHeight;
+
+    canvas.width=W;
+    canvas.height=H;
+
+    player.x =
+        Math.min(
+            Math.max(
+                player.x,
+                player.width
+            ),
+            W-player.width
+        );
+
+    player.y =
+        H-110;
+
+}
+
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+/* ================= PLAYER ================= */
+
+const player={
+
+    x:0,
+
+    y:0,
+
+    width:38,
+
+    height:48,
+
+    speed:7,
+
+    left:false,
+
+    right:false
+
+};
+
+/* ================= GAME DATA ================= */
+
+let gameState="MENU";
+
+let gameMode="classic";
+
+let score=0;
+
+let coins=0;
+
+let lives=3;
+
+let bullets=[];
+
+let enemies=[];
+
+let coinObjects=[];
+
+let particles=[];
+
+let stars=[];
+
+let spawnTimer=0;
+
+let coinTimer=0;
+
+let animationId=null;
+
+let paused=false;
+
+let difficulty=1;
+
+/* ==========================================================
+   STARS
+========================================================== */
+
+function createStars(){
+
+    stars=[];
+
+    for(
+        let i=0;
+        i<110;
+        i++
+    ){
+
+        stars.push({
+
+            x:Math.random()*W,
+
+            y:Math.random()*H,
+
+            r:
+                Math.random()*1.8+.3,
+
+            speed:
+                Math.random()*1.8+.4,
+
+            alpha:
+                Math.random()*.7+.2
+
+        });
+
+    }
+
+}
+
+function drawSpace(){
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            H
+        );
+
+    gradient.addColorStop(
+        0,
+        "#020617"
+    );
+
+    gradient.addColorStop(
+        .5,
+        "#081433"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#01030a"
+    );
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    for(
+        const star of stars
+    ){
+
+        star.y +=
+            star.speed;
+
+        if(
+            star.y>H
+        ){
+
+            star.y=0;
+
+            star.x=
+                Math.random()*W;
+
+        }
+
+        ctx.globalAlpha=
+            star.alpha;
+
+        ctx.fillStyle="#fff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            star.x,
+            star.y,
+            star.r,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha=1;
+
+}
+
+/* ==========================================================
+   PLAYER DRAW
+========================================================== */
+
+function drawPlayer(){
+
+    const outfit =
+        SHOP.outfits.find(
+            o =>
+            o.id ===
+            currentUser.currentOutfit
+        );
+
+    const color =
+        outfit ?
+        outfit.color :
+        "#00ffff";
+
+    ctx.save();
+
+    ctx.translate(
+        player.x,
+        player.y
+    );
+
+    ctx.shadowBlur=20;
+    ctx.shadowColor=color;
+
+    /* Engine fire */
+
+    const flame =
+        20 +
+        Math.random()*15;
+
+    ctx.fillStyle=
+        Math.random()>.5
+        ?
+        "#ff6600"
+        :
+        "#ffd700";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -7,
+        17
+    );
+
+    ctx.lineTo(
+        0,
+        20+flame
+    );
+
+    ctx.lineTo(
+        7,
+        17
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    /* Wings */
+
+    ctx.fillStyle=
+        color;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        -25
+    );
+
+    ctx.lineTo(
+        20,
+        20
+    );
+
+    ctx.lineTo(
+        5,
+        13
+    );
+
+    ctx.lineTo(
+        0,
+        22
+    );
+
+    ctx.lineTo(
+        -5,
+        13
+    );
+
+    ctx.lineTo(
+        -20,
+        20
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    /* Cabin */
+
+    ctx.fillStyle="#fff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        -6,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
+/* ==========================================================
+   BULLET
+========================================================== */
+
+function shoot(){
+
+    if(
+        gameState!=="PLAYING" ||
+        paused
+    )
+        return;
+
+    if(
+        bullets.length>8
+    )
+        return;
+
+    bullets.push({
+
+        x:player.x,
+
+        y:player.y-25,
+
+        speed:12
+
+    });
+
+    AudioEngine.laser();
+
+}
+
+/* ==========================================================
+   ENEMY
+========================================================== */
+
+function spawnEnemy(){
+
+    const radius =
+        Math.random()*13+14;
+
+    enemies.push({
+
+        x:
+            radius+
+            Math.random()*
+            (W-radius*2),
+
+        y:-40,
+
+        radius,
+
+        speed:
+            (Math.random()*1.8+2)
+            *difficulty,
+
+        rotation:
+            Math.random()*Math.PI*2
+
+    });
+
+}
+
+function spawnCoin(){
+
+    coinObjects.push({
+
+        x:
+            15+
+            Math.random()*
+            (W-30),
+
+        y:-30,
+
+        radius:11,
+
+        speed:
+            3+
+            difficulty*.3,
+
+        rotation:0
+
+    });
+
+}
+
+/* ==========================================================
+   METEOR DRAW
+========================================================== */
+
+function drawEnemy(enemy){
+
+    ctx.save();
+
+    ctx.translate(
+        enemy.x,
+        enemy.y
+    );
+
+    enemy.rotation+=.01;
+
+    ctx.rotate(
+        enemy.rotation
+    );
+
+    ctx.shadowBlur=15;
+    ctx.shadowColor="#ff0033";
+
+    ctx.fillStyle="#ef3340";
+
+    ctx.beginPath();
+
+    const r=
+        enemy.radius;
+
+    for(
+        let i=0;
+        i<8;
+        i++
+    ){
+
+        const angle=
+            (Math.PI*2/8)*i;
+
+        const rr=
+            r*
+            (
+                i%2===0
+                ?1
+                :.7
+            );
+
+        const x=
+            Math.cos(angle)*rr;
+
+        const y=
+            Math.sin(angle)*rr;
+
+        if(i===0)
+            ctx.moveTo(x,y);
+        else
+            ctx.lineTo(x,y);
+
+    }
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    ctx.fillStyle="#991b1b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -4,
+        -3,
+        r*.35,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
+/* ==========================================================
+   COIN DRAW
+========================================================== */
+
+function drawCoin(c){
+
+    c.rotation+=.08;
+
+    ctx.save();
+
+    ctx.translate(
+        c.x,
+        c.y
+    );
+
+    ctx.scale(
+        Math.abs(
+            Math.cos(c.rotation)
+        ),
+        1
+    );
+
+    ctx.shadowBlur=18;
+    ctx.shadowColor="#ffd700";
+
+    ctx.fillStyle="#ffd700";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        c.radius,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle="#fff4a3";
+
+    ctx.font="bold 13px Arial";
+
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(
+        "₿",
+        0,
+        1
+    );
+
+    ctx.restore();
+
+}
+
+/* ==========================================================
+   PARTICLES
+========================================================== */
+
+function explosion(x,y,color="#ff3300"){
+
+    for(
+        let i=0;
+        i<18;
+        i++
+    ){
+
+        particles.push({
+
+            x,
+            y,
+
+            vx:
+                (Math.random()-.5)*7,
+
+            vy:
+                (Math.random()-.5)*7,
+
+            life:30+
+                Math.random()*20,
+
+            color
+
+        });
+
+    }
+
+}
+
+function drawParticles(){
+
+    for(
+        let i=particles.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p=
+            particles[i];
+
+        p.x+=p.vx;
+        p.y+=p.vy;
+        p.vx*=.98;
+        p.vy*=.98;
+        p.life--;
+
+        ctx.globalAlpha=
+            Math.max(
+                0,
+                p.life/50
+            );
+
+        ctx.fillStyle=
+            p.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            2.5,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        if(
+            p.life<=0
+        ){
+
+            particles.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+    ctx.globalAlpha=1;
+
+}
+
+/* ==========================================================
+   COLLISION
+========================================================== */
+
+function distance(a,b){
+
+    return Math.hypot(
+        a.x-b.x,
+        a.y-b.y
+    );
+
+}
+
+/* ==========================================================
+   UPDATE GAME
+========================================================== */
+
+function updateGame(){
+
+    if(
+        gameState!=="PLAYING" ||
+        paused
+    )
+        return;
+
+    /* PLAYER */
+
+    if(player.left){
+
+        player.x -=
+            player.speed;
+
+    }
+
+    if(player.right){
+
+        player.x +=
+            player.speed;
+
+    }
+
+    player.x=
+        Math.max(
+            player.width/2,
+            Math.min(
+                W-player.width/2,
+                player.x
+            )
+        );
+
+    /* BULLETS */
+
+    for(
+        let i=bullets.length-1;
+        i>=0;
+        i--
+    ){
+
+        bullets[i].y -=
+            bullets[i].speed;
+
+        if(
+            bullets[i].y < -30
+        ){
+
+            bullets.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+    /* DIFFICULTY */
+
+    difficulty =
+        1 +
+        Math.floor(score/100)*.12;
+
+    /* SPAWN ENEMIES */
+
+    spawnTimer++;
+
+    const interval =
+        Math.max(
+            18,
+            48 -
+            Math.floor(score/40)
+        );
+
+    if(
+        spawnTimer>=interval
+    ){
+
+        spawnTimer=0;
+
+        spawnEnemy();
+
+    }
+
+    /* COINS */
+
+    coinTimer++;
+
+    if(
+        coinTimer>=90
+    ){
+
+        coinTimer=0;
+
+        spawnCoin();
+
+    }
+
+    /* ENEMIES */
+
+    for(
+        let i=enemies.length-1;
+        i>=0;
+        i--
+    ){
+
+        const enemy =
+            enemies[i];
+
+        enemy.y +=
+            enemy.speed;
+
+        let destroyed=false;
+
+        /* Bullet collision */
+
+        for(
+            let j=bullets.length-1;
+            j>=0;
+            j--
+        ){
+
+            const bullet=
+                bullets[j];
+
+            if(
+                distance(
+                    enemy,
+                    bullet
+                ) <
+                enemy.radius+5
+            ){
+
+                explosion(
+                    enemy.x,
+                    enemy.y,
+                    "#ff4444"
+                );
+
+                enemies.splice(
+                    i,
+                    1
+                );
+
+                bullets.splice(
+                    j,
+                    1
+                );
+
+                score+=10;
+
+                AudioEngine.coin();
+
+                destroyed=true;
+
+                break;
+
+            }
+
+        }
+
+        if(destroyed)
+            continue;
+
+        /* Player collision */
+
+        if(
+            distance(
+                enemy,
+                player
+            ) <
+            enemy.radius+
+            player.width*.45
+        ){
+
+            explosion(
+                enemy.x,
+                enemy.y
+            );
+
+            enemies.splice(
+                i,
+                1
+            );
+
+            lives--;
+
+            AudioEngine.explosion();
+
+            updateHUD();
+
+            if(
+                lives<=0
+            ){
+
+                endGame();
+
+                return;
+
+            }
+
+            continue;
+
+        }
+
+        /* Out */
+
+        if(
+            enemy.y >
+            H+60
+        ){
+
+            enemies.splice(
+                i,
+                1
+            );
+
+            /*
+             * Қашып кеткен метеорит үшін
+             * Ranked режимінде аздап ұпай жоғалту жоқ.
+             */
+
+        }
+
+    }
+
+    /* COINS */
+
+    for(
+        let i=coinObjects.length-1;
+        i>=0;
+        i--
+    ){
+
+        const coin=
+            coinObjects[i];
+
+        coin.y +=
+            coin.speed;
+
+        if(
+            distance(
+                coin,
+                player
+            ) <
+            coin.radius+
+            player.width*.5
+        ){
+
+            coins++;
+
+            coinObjects.splice(
+                i,
+                1
+            );
+
+            AudioEngine.coin();
+
+            updateHUD();
+
+            continue;
+
+        }
+
+        if(
+            coin.y>H+40
+        ){
+
+            coinObjects.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+}
+
+/* ==========================================================
+   DRAW GAME
+========================================================== */
+
+function drawGame(){
+
+    drawSpace();
+
+    if(
+        gameState==="PLAYING" ||
+        gameState==="PAUSED"
+    ){
+
+        for(
+            const bullet of bullets
+        ){
+
+            ctx.shadowBlur=12;
+            ctx.shadowColor="#ffe600";
+
+            ctx.fillStyle="#ffe600";
+
+            ctx.fillRect(
+                bullet.x-2.5,
+                bullet.y,
+                5,
+                16
+            );
+
+        }
+
+        ctx.shadowBlur=0;
+
+        for(
+            const enemy of enemies
+        ){
+
+            drawEnemy(
+                enemy
+            );
+
+        }
+
+        for(
+            const coin of coinObjects
+        ){
+
+            drawCoin(
+                coin
+            );
+
+        }
+
+        drawParticles();
+
+        drawPlayer();
+
+    }
+
+    if(
+        gameState==="PAUSED"
+    ){
+
+        ctx.fillStyle=
+            "rgba(0,0,0,.55)";
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+        ctx.fillStyle="#fff";
+
+        ctx.font=
+            "bold 34px Segoe UI";
+
+        ctx.textAlign="center";
+
+        ctx.fillText(
+            "PAUSE",
+            W/2,
+            H/2
+        );
+
+    }
+
+}
+
+/* ==========================================================
+   MAIN LOOP
+========================================================== */
+
+function gameLoop(){
+
+    updateGame();
+
+    drawGame();
+
+    animationId =
+        requestAnimationFrame(
+            gameLoop
+        );
+
+}
+
+/* ==========================================================
+   START GAME
+========================================================== */
+
+function startGame(){
+
+    if(!currentUser)
+        return;
+
+    resizeCanvas();
+
+    gameState="PLAYING";
+
+    paused=false;
+
+    score=0;
+
+    coins=0;
+
+    lives=3;
+
+    bullets=[];
+
+    enemies=[];
+
+    coinObjects=[];
+
+    particles=[];
+
+    spawnTimer=0;
+
+    coinTimer=0;
+
+    difficulty=1;
+
+    player.x=
+        W/2;
+
+    player.y=
+        H-110;
+
+    document.getElementById(
+        "game-ui"
+    ).style.display="flex";
+
+    document.getElementById(
+        "mobile-controls"
+    ).style.display="flex";
+
+    document.getElementById(
+        "pauseButton"
+    ).style.display="block";
+
+    document.getElementById(
+        "gameOver"
+    ).style.display="none";
+
+    updateHUD();
+
+    AudioEngine.init();
+
+    AudioEngine.startMusic();
+
+}
+
+/* ==========================================================
+   LOADING GAME
+========================================================== */
+
+function startLoadingGame(mode){
+
+    gameMode=mode;
+
+    /* Ойын басталар алдында әр жолы толық 10 секунд жүктеледі. */
+    loading(
+        null,
+        showGame
+    );
+
+}
+
+function showGame(){
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(
+            s =>
+            s.classList.remove(
+                "active"
+            )
+        );
+
+    startGame();
+
+}
+
+/* ==========================================================
+   HUD
+========================================================== */
+
+function updateHUD(){
+
+    document.getElementById(
+        "gameScore"
+    ).innerText =
+        score;
+
+    document.getElementById(
+        "gameCoins"
+    ).innerText =
+        coins;
+
+    document.getElementById(
+        "gameLives"
+    ).innerText =
+        lives;
+
+}
+
+/* ==========================================================
+   GAME OVER
+========================================================== */
+
+function endGame(){
+
+    if(
+        gameState!=="PLAYING"
+    )
+        return;
+
+    gameState="GAMEOVER";
+
+    paused=false;
+
+    player.left=false;
+    player.right=false;
+
+    AudioEngine.explosion();
+
+    document.getElementById(
+        "game-ui"
+    ).style.display="none";
+
+    document.getElementById(
+        "mobile-controls"
+    ).style.display="none";
+
+    document.getElementById(
+        "pauseButton"
+    ).style.display="none";
+
+    document.getElementById(
+        "finalScore"
+    ).innerText =
+        score;
+
+    document.getElementById(
+        "finalCoins"
+    ).innerText =
+        coins;
+
+    document.getElementById(
+        "finalMode"
+    ).innerText =
+        gameMode.toUpperCase();
+
+    /*
+     * Монета барлық режимде сақталады.
+     */
+
+    currentUser.coins +=
+        coins;
+
+    /*
+     * Тек Ranked ұпайы рейтингке қосылады.
+     */
+
+    if(
+        gameMode==="ranked"
+    ){
+
+        currentUser.score +=
+            score;
+
+    }
+
+    saveDB();
+
+    document.getElementById(
+        "gameOver"
+    ).style.display="flex";
+
+}
+
+/* ==========================================================
+   STOP GAME
+========================================================== */
+
+function stopGame(){
+
+    gameState="MENU";
+
+    paused=false;
+
+    player.left=false;
+    player.right=false;
+
+    document.getElementById(
+        "game-ui"
+    ).style.display="none";
+
+    document.getElementById(
+        "mobile-controls"
+    ).style.display="none";
+
+    document.getElementById(
+        "pauseButton"
+    ).style.display="none";
+
+}
+
+/* ==========================================================
+   RESTART
+========================================================== */
+
+function restartGame(){
+
+    document.getElementById(
+        "gameOver"
+    ).style.display="none";
+
+    startGame();
+
+}
+
+/* ==========================================================
+   RETURN LOBBY
+========================================================== */
+
+function returnLobby(){
+
+    document.getElementById(
+        "gameOver"
+    ).style.display="none";
+
+    stopGame();
+
+    updateLobby();
+
+    showScreen(
+        "lobby-screen"
+    );
+
+}
+
+/* ==========================================================
+   PAUSE
+========================================================== */
+
+function togglePause(){
+
+    if(
+        gameState!=="PLAYING" &&
+        gameState!=="PAUSED"
+    )
+        return;
+
+    paused =
+        !paused;
+
+    gameState =
+        paused ?
+        "PAUSED" :
+        "PLAYING";
+
+    document.getElementById(
+        "pauseButton"
+    ).innerText =
+        paused ?
+        "▶" :
+        "⏸";
+
+}
+
+/* ==========================================================
+   KEYBOARD
+========================================================== */
+
+window.addEventListener(
+    "keydown",
+    e=>{
+
+        if(
+            e.code==="ArrowLeft" ||
+            e.code==="KeyA"
+        ){
+
+            player.left=true;
+
+        }
+
+        if(
+            e.code==="ArrowRight" ||
+            e.code==="KeyD"
+        ){
+
+            player.right=true;
+
+        }
+
+        if(
+            e.code==="Space"
+        ){
+
+            e.preventDefault();
+
+            shoot();
+
+        }
+
+        if(
+            e.code==="Escape"
+        ){
+
+            togglePause();
+
+        }
+
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    e=>{
+
+        if(
+            e.code==="ArrowLeft" ||
+            e.code==="KeyA"
+        ){
+
+            player.left=false;
+
+        }
+
+        if(
+            e.code==="ArrowRight" ||
+            e.code==="KeyD"
+        ){
+
+            player.right=false;
+
+        }
+
+    }
+);
+
+/* ==========================================================
+   MOBILE CONTROLS
+========================================================== */
+
+function holdButton(
+    element,
+    direction
+){
+
+    element.addEventListener(
+        "pointerdown",
+        e=>{
+
+            e.preventDefault();
+
+            if(
+                direction==="left"
+            )
+                player.left=true;
+
+            if(
+                direction==="right"
+            )
+                player.right=true;
+
+            if(
+                direction==="fire"
+            )
+                shoot();
+
+        }
+    );
+
+    const release=()=>{
+
+        if(
+            direction==="left"
+        )
+            player.left=false;
+
+        if(
+            direction==="right"
+        )
+            player.right=false;
+
+    };
+
+    element.addEventListener(
+        "pointerup",
+        release
+    );
+
+    element.addEventListener(
+        "pointercancel",
+        release
+    );
+
+    element.addEventListener(
+        "pointerleave",
+        release
+    );
+
+}
+
+holdButton(
+    document.getElementById(
+        "leftBtn"
+    ),
+    "left"
+);
+
+holdButton(
+    document.getElementById(
+        "rightBtn"
+    ),
+    "right"
+);
+
+holdButton(
+    document.getElementById(
+        "fireBtn"
+    ),
+    "fire"
+);
+
+/* ==========================================================
+   INITIALIZATION
+========================================================== */
+
+resizeCanvas();
+
+createStars();
+
+updateSettings();
+
+const savedUser =
+    localStorage.getItem(
+        "cyberGlideCurrentUser"
+    );
+
+if(
+    savedUser &&
+    db[savedUser]
+){
+
+    currentUser =
+        db[savedUser];
+
+    updateLobby();
+
+    /* Сақталған аккаунтпен қайта кіргенде де 10 секундтық loading. */
+    loading(
+        "lobby-screen"
+    );
+
+}else{
+
+    showScreen(
+        "welcome-screen"
+    );
+
+}
+
+/* Бір ғана негізгі animation loop */
+
+if(!animationId){
+
+    animationId =
+        requestAnimationFrame(
+            gameLoop
+        );
+
+}
+
+/* Барлық батырмаға дыбыс */
+
+document.addEventListener(
+    "click",
+    e=>{
+
+        if(
+            e.target.closest(
+                ".btn"
+            )
+        ){
+
+            AudioEngine.click();
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
